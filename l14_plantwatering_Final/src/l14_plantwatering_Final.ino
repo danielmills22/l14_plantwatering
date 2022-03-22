@@ -46,6 +46,7 @@ Adafruit_MQTT_Publish mqttrHumidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME 
 Adafruit_MQTT_Publish mqttmoisture = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/moisture");
 Adafruit_MQTT_Publish mqttAQ = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/AirQuality");
 Adafruit_MQTT_Publish mqttdust = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/dust");
+Adafruit_MQTT_Publish mqtttime = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/time");  //time object for MQTT
 //Adafruit_MQTT_Subscribe mqttSubPumpButton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/pumpButton"); Updated Name
 Adafruit_MQTT_Subscribe mqttObj2 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/FeedNameB");  
 
@@ -61,11 +62,12 @@ bool status;      //sets for sd card
 unsigned long last, lastTime;
 float value2;        //MQTT Button
 int moistureValues;  //var to store the moisture probe values
+int lastTime;
 
 //DUST SENSOR Variables (var needed for the dust sensor)
 unsigned long duration;             //creates the duration var
 unsigned long starttime;
-unsigned long sampletime_ms = 30000;//sampe 30s ;
+unsigned long sampletime_ms = 5000;//sampe 30s ;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;            //creates var to store the concentration values
@@ -155,8 +157,8 @@ void loop() {
 
   //*Moisture
   moistureValues = analogRead(MOISTURESENSOR);         //gets the values from the moisture sensor
-  Serial.printf("Moisture Values %i", moistureValues); //prints the
-  delay(2000);
+  //Serial.printf("Moisture Values %i", moistureValues); //prints the
+  //delay(2000);
 
   //*MQTT Subscription
   Adafruit_MQTT_Subscribe *subscription;                                             //looks for MQTT subscriptions for button input to turn on motor pump
@@ -168,13 +170,24 @@ void loop() {
   }
 
   //*Pump  //add a millis timer to the this function
-  if (moistureValues < 2300 || value2 == 1){  //if the the soil is dry(less than value), pump water
+   if (value2 == 1){  //if the the soil is dry(less than value), pump water
     digitalWrite(PUMP, HIGH);                 //turns pump on
     Serial.printf("Pump is ON \n");
     delay(500);
     digitalWrite(PUMP, LOW);                  //turns pump off
     Serial.printf("Pump is OFF \n");
     delay(500);
+  }
+  if ((millis()-lastTime)>(60000*30)) {   //
+    if (moistureValues < 2300 ){  //if the the soil is dry(less than value), pump water
+      digitalWrite(PUMP, HIGH);                 //turns pump on
+      Serial.printf("Pump is ON \n");
+      delay(500);
+      digitalWrite(PUMP, LOW);                  //turns pump off
+      Serial.printf("Pump is OFF \n");
+      delay(500);
+    }
+    lastTime = millis();
   }
 
   //*BME
@@ -195,7 +208,7 @@ void loop() {
   }
   showDisplayValues(); //function to print sensor values to OLED
   
-  if((millis()-lastTime > 1000)) {
+  if((millis()-lastTime > 20000)) {
    if(mqtt.Update()) {  //starts MQTT updats
     mqtttemp.publish(temp);                                      //publishes the temp values  Adafruit
     Serial.printf("Publishing Temp %0.2f \n", temp);             //prints temp values to serial monitor
@@ -208,7 +221,9 @@ void loop() {
     mqttAQ.publish(sensor.getValue());                           //gets the Air Quality values
     Serial.printf("Publishing AQ %i \n", sensor.getValue());     //publishes the AQ Values
     mqttdust.publish(concentration);                             //gets the Dust
-    Serial.printf("Publishing Dust Values %0.2f \n", concentration);
+    Serial.printf("Publishing Dust Values %0.4f \n", concentration);
+    mqttdust.publish(DateTime);                             //gets the Dust
+    Serial.printf("Publishing Time  \n", DateTime);
    }
    lastTime = millis();
   }

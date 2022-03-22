@@ -6,12 +6,13 @@
  */
 
 #include "math.h"
+ SYSTEM_MODE(SEMI_AUTOMATIC); // Uncomment if using without Wifi
 
 //const int DUSTSENSOR = A2;
 int pin = A2;
 unsigned long duration;
 unsigned long starttime;
-unsigned long sampletime_ms = 30000;//sampe 30s ;
+unsigned long sampletime_ms = 3000;//sampe 30s ;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;
