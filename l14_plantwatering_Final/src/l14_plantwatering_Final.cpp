@@ -189,8 +189,8 @@ void loop() {
   }
 
   //*BME
-  temp = bme.readTemperature();
-  press = bme.readPressure();
+  temp = (bme.readTemperature()*1.8)+32;
+  press = bme.readPressure()*0.00030;
   rHumidity = bme.readHumidity();
 
   //*Dust
@@ -249,9 +249,9 @@ void MQTT_connect() {  //this function is important to include
 void showDisplayValues(){
   display.setCursor(0,0);
   display.clearDisplay();
-  display.printf("Temp %0.1f\n", temp);
-  display.printf("Pressure %0.1f\n", press);
-  display.printf("Humidity  %0.1f\n", rHumidity);
+  display.printf("Temp: %0.1f\n", temp);
+  display.printf("Pressure: %0.1f\n", press);
+  display.printf("Humidity:  %0.1f\n", rHumidity);
   display.printf("AQ: %i \n", sensor.getValue());
   display.printf("Moisture: %i \n", moistureValues);
   display.printf("Dust: %0.2f \n", concentration);
