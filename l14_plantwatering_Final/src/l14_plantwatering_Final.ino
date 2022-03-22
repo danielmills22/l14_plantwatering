@@ -43,6 +43,8 @@ Adafruit_MQTT_Publish mqtttemp = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/fee
 Adafruit_MQTT_Publish mqttpress = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/press");
 Adafruit_MQTT_Publish mqttrHumidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/rHumidity");
 Adafruit_MQTT_Publish mqttmoisture = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/moisture");
+Adafruit_MQTT_Publish mqttAQ = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/AirQuality");
+Adafruit_MQTT_Publish mqttdust = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/dust");
 //Adafruit_MQTT_Subscribe mqttSubPumpButton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/pumpButton"); Updated Name
 Adafruit_MQTT_Subscribe mqttObj2 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/FeedNameB");  
 
@@ -154,8 +156,8 @@ void loop() {
   Serial.printf("Moisture Values %i", moistureValues);
   delay(2000);
 
-   //*MQTT Subscription
-   Adafruit_MQTT_Subscribe *subscription;
+  //*MQTT Subscription
+  Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(100))) {   //looks for receiving signal
      if (subscription == &mqttObj2) {
         value2 = atof((char *)mqttObj2.lastread);  //takes last data and converts it char and converts it to a float
@@ -200,11 +202,14 @@ void loop() {
     Serial.printf("Publishing RH %0.2f \n", rHumidity);
     mqttmoisture.publish(moistureValues); 
     Serial.printf("Publishing Moisture %i \n", moistureValues);
-    //mqttpublishMoisture.publish(concentration); 
-    //Serial.printf("Publishing AQ %i \n", concentration);
+    mqttAQ.publish(sensor.getValue()); 
+    Serial.printf("Publishing AQ %i \n", sensor.getValue());
+    mqttdust.publish(concentration); 
+    Serial.printf("Publishing Dust Values %0.2f \n", concentration);
    } 
    lastTime = millis();
   }
+  showDisplayValues();
 }
 
 //}
@@ -226,4 +231,16 @@ void MQTT_connect() {  //this function is important to include
        delay(5000);  // wait 5 seconds
   }
   Serial.printf("MQTT Connected!\n");   //output for if connection was successful
+}
+
+void showDisplayValues(){
+  display.setCursor(0,0);
+  display.clearDisplay();
+  display.printf("Temp %0.1f\n", temp);
+  display.printf("Pressure %0.1f\n", press);
+  display.printf("Humidity  %0.1f\n", rHumidity);
+  display.printf("AQ: %0.1f \n", sensor.getValue());
+  display.printf("Moisture: %i \n", moistureValues);
+  display.printf("Dust: %0.2f \n", concentration);
+  display.display();
 }
