@@ -17,6 +17,7 @@
 #include "Adafruit_MQTT/Adafruit_MQTT_SPARK.h"
 #include "Air_Quality_Sensor.h"            //Library for Air Quality
 
+
 //Define OLED
 #define OLED_RESET D4
 Adafruit_SSD1306 display(OLED_RESET);
@@ -54,7 +55,7 @@ const int DUSTSENSOR = A2;
 const int MOISTURESENSOR = A1;
 AirQualitySensor sensor(A3);
 
-
+bool status;      //sets for sd card
 
 /************Declare Variables*************/
 unsigned long last, lastTime;
@@ -74,6 +75,7 @@ float concentration = 0;
 //-------------Setup Loop
 void setup() {
   Serial.begin(9600);  //Starts the Serial monitor
+  bme.begin(0x76);
   //*Setup for OLED
   Time.zone(-7);  //Sets the mountain time zone
   Particle.syncTime();  //syncs particle time

@@ -23,12 +23,13 @@
 #include "Adafruit_MQTT/Adafruit_MQTT_SPARK.h"
 #include "Air_Quality_Sensor.h"            //Library for Air Quality
 
+
 //Define OLED
 void setup();
 void loop();
 void MQTT_connect();
 void showDisplayValues();
-#line 21 "c:/Users/18044/Documents/IoT/l14_plantwatering/l14_plantwatering_Final/src/l14_plantwatering_Final.ino"
+#line 22 "c:/Users/18044/Documents/IoT/l14_plantwatering/l14_plantwatering_Final/src/l14_plantwatering_Final.ino"
 #define OLED_RESET D4
 Adafruit_SSD1306 display(OLED_RESET);
 String DateTime, TimeOnly;
@@ -65,7 +66,7 @@ const int DUSTSENSOR = A2;
 const int MOISTURESENSOR = A1;
 AirQualitySensor sensor(A3);
 
-
+bool status;      //sets for sd card
 
 /************Declare Variables*************/
 unsigned long last, lastTime;
@@ -85,6 +86,7 @@ float concentration = 0;
 //-------------Setup Loop
 void setup() {
   Serial.begin(9600);  //Starts the Serial monitor
+  bme.begin(0x76);
   //*Setup for OLED
   Time.zone(-7);  //Sets the mountain time zone
   Particle.syncTime();  //syncs particle time
@@ -202,6 +204,7 @@ void loop() {
     lowpulseoccupancy = 0;
     starttime = millis();
   }
+  showDisplayValues(); //prints values to OLED
   
   if((millis()-lastTime > 1000)) {
    if(mqtt.Update()) {
@@ -220,7 +223,6 @@ void loop() {
    } 
    lastTime = millis();
   }
-  showDisplayValues();
 }
 
 //}
