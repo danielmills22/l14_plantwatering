@@ -7,7 +7,7 @@
 
 ///////////////////////////////
 //-----Include and Objects Block
-#include "credentials.h"                    //creddential for ada fruit dashboard
+#include "credential.h"                    //creddential for ada fruit dashboard
 #include "math.h"
 #include <Adafruit_GFX.h>                   //library for graphics
 #include <Adafruit_SSD1306.h>               //library for OLED
@@ -113,7 +113,7 @@ void loop() {
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.setTextColor(BLACK, WHITE); // 'inverted' text
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setTextColor(WHITE);
   display.display();
   delay(2000);
@@ -191,6 +191,7 @@ void loop() {
     lowpulseoccupancy = 0;
     starttime = millis();
   }
+  showDisplayValues(); //prints values to OLED
   
   if((millis()-lastTime > 1000)) {
    if(mqtt.Update()) {
@@ -209,7 +210,6 @@ void loop() {
    } 
    lastTime = millis();
   }
-  showDisplayValues();
 }
 
 //}
@@ -239,7 +239,7 @@ void showDisplayValues(){
   display.printf("Temp %0.1f\n", temp);
   display.printf("Pressure %0.1f\n", press);
   display.printf("Humidity  %0.1f\n", rHumidity);
-  display.printf("AQ: %0.1f \n", sensor.getValue());
+  display.printf("AQ: %i \n", sensor.getValue());
   display.printf("Moisture: %i \n", moistureValues);
   display.printf("Dust: %0.2f \n", concentration);
   display.display();

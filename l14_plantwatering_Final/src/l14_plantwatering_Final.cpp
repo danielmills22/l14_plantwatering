@@ -13,7 +13,7 @@
 
 ///////////////////////////////
 //-----Include and Objects Block
-#include "credentials.h"                    //creddential for ada fruit dashboard
+#include "credential.h"                    //creddential for ada fruit dashboard
 #include "math.h"
 #include <Adafruit_GFX.h>                   //library for graphics
 #include <Adafruit_SSD1306.h>               //library for OLED
@@ -124,7 +124,7 @@ void loop() {
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.setTextColor(BLACK, WHITE); // 'inverted' text
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setTextColor(WHITE);
   display.display();
   delay(2000);
@@ -167,8 +167,8 @@ void loop() {
   Serial.printf("Moisture Values %i", moistureValues);
   delay(2000);
 
-   //*MQTT Subscription
-   Adafruit_MQTT_Subscribe *subscription;
+  //*MQTT Subscription
+  Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(100))) {   //looks for receiving signal
      if (subscription == &mqttObj2) {
         value2 = atof((char *)mqttObj2.lastread);  //takes last data and converts it char and converts it to a float
@@ -250,7 +250,7 @@ void showDisplayValues(){
   display.printf("Temp %0.1f\n", temp);
   display.printf("Pressure %0.1f\n", press);
   display.printf("Humidity  %0.1f\n", rHumidity);
-  display.printf("AQ: %0.1f \n", sensor.getValue());
+  display.printf("AQ: %i \n", sensor.getValue());
   display.printf("Moisture: %i \n", moistureValues);
   display.printf("Dust: %0.2f \n", concentration);
   display.display();
