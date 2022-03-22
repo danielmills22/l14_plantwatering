@@ -57,9 +57,9 @@ Adafruit_MQTT_Publish mqttrHumidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME 
 Adafruit_MQTT_Publish mqttmoisture = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/moisture");
 Adafruit_MQTT_Publish mqttAQ = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/AirQuality");
 Adafruit_MQTT_Publish mqttdust = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/dust");
-Adafruit_MQTT_Publish mqtttime = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/time");  //time object for MQTT
+//Adafruit_MQTT_Publish mqtttime = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/time");  //time object for MQTT
 //Adafruit_MQTT_Subscribe mqttSubPumpButton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/pumpButton"); Updated Name
-Adafruit_MQTT_Subscribe mqttObj2 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/FeedNameB");  
+Adafruit_MQTT_Subscribe mqttObj2 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/FeedNamePlantB");  
 
 //Set Sensor Pins
 const int PUMP = D11;           //sets the pin to use for the pump
@@ -71,9 +71,9 @@ bool status;      //sets for sd card
 
 /************Declare Variables*************/
 unsigned long last, lastTime;
-float value2;        //MQTT Button
+float valueB;        //MQTT Button
 int moistureValues;  //var to store the moisture probe values
-int lastTime;
+int lastTime2;
 
 //DUST SENSOR Variables (var needed for the dust sensor)
 unsigned long duration;             //creates the duration var
@@ -113,7 +113,7 @@ void setup() {
     Serial.printf(".");
   }
 
-  //mqtt.subscribe(&mqttSubPumpButton);  //subscribe to pump button from Adafruit
+  mqtt.subscribe(&mqttObj2);  //subscribe to pump button from Adafruit  --changed
   starttime = millis();  //stores current time to the starttime var
 }
 
@@ -175,13 +175,13 @@ void loop() {
   Adafruit_MQTT_Subscribe *subscription;                                             //looks for MQTT subscriptions for button input to turn on motor pump
   while ((subscription = mqtt.readSubscription(100))) {                              //looks for receiving signal
      if (subscription == &mqttObj2) {
-        value2 = atof((char *)mqttObj2.lastread);                                    //takes last data and converts it char and converts it to a float
-        Serial.printf("Received %0.2f from Adafruit.io feed FeedNameB \n",value2);   //prints to screen
+        valueB = atof((char *)mqttObj2.lastread);                                    //takes last data and converts it char and converts it to a float
+        Serial.printf("Received %0.2f from Adafruit.io feed FeedNameB \n",valueB);   //prints to screen
      }
   }
 
   //*Pump  //add a millis timer to the this function
-   if (value2 == 1){  //if the the soil is dry(less than value), pump water
+   if (valueB == 1){  //if the the soil is dry(less than value), pump water
     digitalWrite(PUMP, HIGH);                 //turns pump on
     Serial.printf("Pump is ON \n");
     delay(500);
@@ -189,7 +189,7 @@ void loop() {
     Serial.printf("Pump is OFF \n");
     delay(500);
   }
-  if ((millis()-lastTime)>(60000*30)) {   //
+  if ((millis()-lastTime2)>(60000*30)) {   //
     if (moistureValues < 2300 ){  //if the the soil is dry(less than value), pump water
       digitalWrite(PUMP, HIGH);                 //turns pump on
       Serial.printf("Pump is ON \n");
@@ -232,9 +232,9 @@ void loop() {
     mqttAQ.publish(sensor.getValue());                           //gets the Air Quality values
     Serial.printf("Publishing AQ %i \n", sensor.getValue());     //publishes the AQ Values
     mqttdust.publish(concentration);                             //gets the Dust
-    Serial.printf("Publishing Dust Values %0.4f \n", concentration);
-    mqttdust.publish(DateTime);                             //gets the Dust
-    Serial.printf("Publishing Time  \n", DateTime);
+    Serial.printf("Publishing Dust Values %0.2f \n", concentration);
+    //mqttdust.publish(DateTime.c_str());                             //gets the Dust
+    //Serial.printf(" Date and time is %s\n", DateTime.c_str());
    }
    lastTime = millis();
   }
