@@ -123,7 +123,7 @@ void loop() {
         Serial.printf("Disconnecting \n");
         mqtt.disconnect();
       }
-      last = millis();
+    last = millis();
   }
 
   //*MQTT Subscription
@@ -135,7 +135,7 @@ void loop() {
      }
   }
 
-  //*Pump  //add a millis timer to the this function
+  //*Pump  
   if (valueB == 1){  //if the the soil is dry(less than value), pump water
     digitalWrite(PUMP, HIGH);                 //turns pump on
     Serial.printf("Pump is ON \n");
@@ -144,7 +144,7 @@ void loop() {
     Serial.printf("Pump is OFF \n");
     delay(500);
   }
-  if ((millis()-lastTime2)>(60000*30)||valueB == 1) {   //
+  if ((millis()-lastTime2)>(60000*30)) {   //
     if (moistureValues > 2300 ){  //if the the soil is dry(less than value), pump water
       digitalWrite(PUMP, HIGH);                 //turns pump on
       Serial.printf("Pump is ON \n");
@@ -157,8 +157,8 @@ void loop() {
   }
   showDisplayValues(); //function to print sensor values to OLED
   
-  ////////////////////////////////////////////
-  //*Gets Reads and Publish Values to Adafruit 
+  //////////////////////////////////////////
+  //*Reads and Publishes Values to Adafruit 
   if((millis()-lastTime > 20000)) {
   
     //*Air Quality Check Function
@@ -213,7 +213,7 @@ void loop() {
       Serial.printf("Publishing AQ %i \n", sensor.getValue());     //publishes the AQ Values
       mqttdust.publish(concentration);                             //gets the Dust
       Serial.printf("Publishing Dust Values %0.2f \n", concentration);
-      //mqttdust.publish(DateTime.c_str());                             //gets the Dust
+      mqttdust.publish(DateTime.c_str());                             //gets the Dust
       //Serial.printf(" Date and time is %s\n", DateTime.c_str());
     }
    lastTime = millis();
