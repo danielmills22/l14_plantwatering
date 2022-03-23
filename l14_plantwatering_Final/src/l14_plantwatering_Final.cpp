@@ -62,7 +62,7 @@ Adafruit_MQTT_Publish mqttdust = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/fee
 Adafruit_MQTT_Subscribe mqttObj2 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/FeedNamePlantB");  
 
 //Set Sensor Pins
-const int PUMP = D11;           //sets the pin to use for the pump
+const int PUMP = A4;           //sets the pin to use for the pump
 const int DUSTSENSOR = A2;      //sets the pin to use for the dust sensor
 const int MOISTURESENSOR = A1;  //pin to use for the moisture sensor
 AirQualitySensor sensor(A3);    //pin to use for the AQ sensor
@@ -175,7 +175,8 @@ void loop() {
   Adafruit_MQTT_Subscribe *subscription;                                             //looks for MQTT subscriptions for button input to turn on motor pump
   while ((subscription = mqtt.readSubscription(100))) {                              //looks for receiving signal
      if (subscription == &mqttObj2) {
-        valueB = atof((char *)mqttObj2.lastread);                                    //takes last data and converts it char and converts it to a float
+        valueB = atof((char *)mqttObj2
+        .lastread);                                    //takes last data and converts it char and converts it to a float
         Serial.printf("Received %0.2f from Adafruit.io feed FeedNameB \n",valueB);   //prints to screen
      }
   }

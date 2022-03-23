@@ -5,7 +5,7 @@
  * Date:
  */
 
-const int PUMP = D12;
+const int PUMP = A4;
 
 void setup() {
   Serial.begin(9600);

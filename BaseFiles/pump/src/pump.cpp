@@ -14,7 +14,7 @@
 void setup();
 void loop();
 #line 8 "c:/Users/18044/Documents/IoT/l14_plantwatering/BaseFiles/pump/src/pump.ino"
-const int PUMP = D12;
+const int PUMP = A4;
 
 void setup() {
   Serial.begin(9600);
