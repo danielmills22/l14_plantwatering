@@ -60,7 +60,7 @@ bool status;      //sets for sd card
 
 /************Declare Variables*************/
 unsigned long last, lastTime;
-float valueB;        //MQTT Button
+int valueB;        //MQTT Button
 int moistureValues;  //var to store the moisture probe values
 int lastTime2;
 
@@ -89,7 +89,6 @@ void setup() {
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.display();
-  delay(2000);
 
   //*Setup for Dust Sensor
   pinMode(DUSTSENSOR,INPUT);       //sets the pinMode for the dust sensor
@@ -112,16 +111,7 @@ void loop() {
   //*Loop for OLED
   DateTime = Time.timeStr();              // Current Date and Time from Particle Time class
   TimeOnly = DateTime.substring(11 ,19) ; // Extract the Time from the DateTime String
-  delay(2000);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.setTextColor(BLACK, WHITE);     // 'inverted' text
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.display();
-  delay(2000);
-  display.clearDisplay();
+  
 
   //=====Main Functions=======
   //*MQTT Start
@@ -136,42 +126,17 @@ void loop() {
       last = millis();
   }
 
-  //*Air Quality Check Function
-  int quality = sensor.slope();
-  Serial.print("Sensor value: ");
-  Serial.println(sensor.getValue());  
-  //Checks how fresh the air is
-  if (quality == AirQualitySensor::FORCE_SIGNAL) {
-    Serial.println("High pollution! Force signal active.");
-  }
-  else if (quality == AirQualitySensor::HIGH_POLLUTION) {
-    Serial.println("High pollution!");
-  }
-  else if (quality == AirQualitySensor::LOW_POLLUTION) {
-    Serial.println("Low pollution!");
-  }
-  else if (quality == AirQualitySensor::FRESH_AIR) {
-    Serial.println("Fresh air.");
-  }
-  delay(1000);
-
-  //*Moisture
-  moistureValues = analogRead(MOISTURESENSOR);         //gets the values from the moisture sensor
-  //Serial.printf("Moisture Values %i", moistureValues); //prints the
-  //delay(2000);
-
   //*MQTT Subscription
   Adafruit_MQTT_Subscribe *subscription;                                             //looks for MQTT subscriptions for button input to turn on motor pump
   while ((subscription = mqtt.readSubscription(100))) {                              //looks for receiving signal
      if (subscription == &mqttObj2) {
-        valueB = atof((char *)mqttObj2
-        .lastread);                                    //takes last data and converts it char and converts it to a float
-        Serial.printf("Received %0.2f from Adafruit.io feed FeedNameB \n",valueB);   //prints to screen
+        valueB = atoi((char *)mqttObj2.lastread);                                    //takes last data and converts it char and converts it to a float
+        Serial.printf("Received %i from Adafruit.io feed FeedNameB \n",valueB);   //prints to screen
      }
   }
 
   //*Pump  //add a millis timer to the this function
-   if (valueB == 1){  //if the the soil is dry(less than value), pump water
+  if (valueB == 1){  //if the the soil is dry(less than value), pump water
     digitalWrite(PUMP, HIGH);                 //turns pump on
     Serial.printf("Pump is ON \n");
     delay(500);
@@ -179,8 +144,8 @@ void loop() {
     Serial.printf("Pump is OFF \n");
     delay(500);
   }
-  if ((millis()-lastTime2)>(60000*30)) {   //
-    if (moistureValues < 2300 ){  //if the the soil is dry(less than value), pump water
+  if ((millis()-lastTime2)>(60000*30)||valueB == 1) {   //
+    if (moistureValues > 2300 ){  //if the the soil is dry(less than value), pump water
       digitalWrite(PUMP, HIGH);                 //turns pump on
       Serial.printf("Pump is ON \n");
       delay(500);
@@ -188,52 +153,77 @@ void loop() {
       Serial.printf("Pump is OFF \n");
       delay(500);
     }
-    lastTime = millis();
-  }
-
-  //*BME
-  temp = (bme.readTemperature()*1.8)+32;  //gets the temp values  and converts them to F
-  press = bme.readPressure()*0.00030;     //converts the press values to inches of murcury
-  rHumidity = bme.readHumidity();         //gets RH values from the BME sensor
-
-  //*Dust
-  duration = pulseIn(DUSTSENSOR, LOW);
-  lowpulseoccupancy = lowpulseoccupancy+duration;
-  if ((millis()-starttime) > sampletime_ms)//if the sampel time == 30s
-  {
-    ratio = lowpulseoccupancy/(sampletime_ms*10.0);  // Integer percentage 0=>100
-    concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
-    Serial.println(concentration);
-    lowpulseoccupancy = 0;
-    starttime = millis();
+    lastTime2 = millis();
   }
   showDisplayValues(); //function to print sensor values to OLED
   
+  ////////////////////////////////////////////
+  //*Gets Reads and Publish Values to Adafruit 
   if((millis()-lastTime > 20000)) {
-   if(mqtt.Update()) {  //starts MQTT updats
-    mqtttemp.publish(temp);                                      //publishes the temp values  Adafruit
-    Serial.printf("Publishing Temp %0.2f \n", temp);             //prints temp values to serial monitor
-    mqttpress.publish(press);                                    //pub the pressure values
-    Serial.printf("Publishing Pressure %0.2f \n", press);        //prints pressure to serial monitor
-    mqttrHumidity.publish(rHumidity);                            //publishes rHumidity values
-    Serial.printf("Publishing RH %0.2f \n", rHumidity);          //prints the RH values
-    mqttmoisture.publish(moistureValues);                        //publishes the moisture values
-    Serial.printf("Publishing Moisture %i \n", moistureValues);  //prints the moisture values
-    mqttAQ.publish(sensor.getValue());                           //gets the Air Quality values
-    Serial.printf("Publishing AQ %i \n", sensor.getValue());     //publishes the AQ Values
-    mqttdust.publish(concentration);                             //gets the Dust
-    Serial.printf("Publishing Dust Values %0.2f \n", concentration);
-    //mqttdust.publish(DateTime.c_str());                             //gets the Dust
-    //Serial.printf(" Date and time is %s\n", DateTime.c_str());
-   }
+  
+    //*Air Quality Check Function
+    int quality = sensor.slope();
+    Serial.print("Sensor value: ");
+    Serial.println(sensor.getValue());  
+    //Checks how fresh the air is
+    if (quality == AirQualitySensor::FORCE_SIGNAL) {
+      Serial.println("High pollution! Force signal active.");
+    }
+    else if (quality == AirQualitySensor::HIGH_POLLUTION) {
+      Serial.println("High pollution!");
+    }
+    else if (quality == AirQualitySensor::LOW_POLLUTION) {
+      Serial.println("Low pollution!");
+    }
+    else if (quality == AirQualitySensor::FRESH_AIR) {
+      Serial.println("Fresh air.");
+    }
+    delay(500);
+
+    //*Moisture
+    moistureValues = analogRead(MOISTURESENSOR);         //gets the values from the moisture sensor
+
+    //*BME
+    temp = (bme.readTemperature()*1.8)+32;  //gets the temp values  and converts them to F
+    press = bme.readPressure()*0.00030;     //converts the press values to inches of murcury
+    rHumidity = bme.readHumidity();         //gets RH values from the BME sensor
+
+    //*Dust
+    duration = pulseIn(DUSTSENSOR, LOW);
+    lowpulseoccupancy = lowpulseoccupancy+duration;
+    if ((millis()-starttime) > sampletime_ms)//if the sampel time == 30s
+    {
+      ratio = lowpulseoccupancy/(sampletime_ms*10.0);  // Integer percentage 0=>100
+      concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
+      Serial.println(concentration);
+      lowpulseoccupancy = 0;
+      starttime = millis();
+    }
+
+    if(mqtt.Update()) {  //starts MQTT updats
+      mqtttemp.publish(temp);                                      //publishes the temp values  Adafruit
+      Serial.printf("Publishing Temp %0.2f \n", temp);             //prints temp values to serial monitor
+      mqttpress.publish(press);                                    //pub the pressure values
+      Serial.printf("Publishing Pressure %0.2f \n", press);        //prints pressure to serial monitor
+      mqttrHumidity.publish(rHumidity);                            //publishes rHumidity values
+      Serial.printf("Publishing RH %0.2f \n", rHumidity);          //prints the RH values
+      mqttmoisture.publish(moistureValues);                        //publishes the moisture values
+      Serial.printf("Publishing Moisture %i \n", moistureValues);  //prints the moisture values
+      mqttAQ.publish(sensor.getValue());                           //gets the Air Quality values
+      Serial.printf("Publishing AQ %i \n", sensor.getValue());     //publishes the AQ Values
+      mqttdust.publish(concentration);                             //gets the Dust
+      Serial.printf("Publishing Dust Values %0.2f \n", concentration);
+      //mqttdust.publish(DateTime.c_str());                             //gets the Dust
+      //Serial.printf(" Date and time is %s\n", DateTime.c_str());
+    }
    lastTime = millis();
   }
 }
 
 //}
 
-////////////////////////////////
-//-----------------Void Function
+/////////////////////////////////
+//-----------------Void Functions
 // Function to connect and reconnect as necessary to the MQTT server.
 void MQTT_connect() {  //this function is important to include for connecting to MQTT
   int8_t ret;
@@ -243,10 +233,10 @@ void MQTT_connect() {  //this function is important to include for connecting to
   }
   Serial.print("Connecting to MQTT... ");
   while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
-       Serial.printf("%s\n",(char *)mqtt.connectErrorString(ret));
-       Serial.printf("Retrying MQTT connection in 5 seconds..\n");
-       mqtt.disconnect();
-       delay(5000);  // wait 5 seconds
+      Serial.printf("%s\n",(char *)mqtt.connectErrorString(ret));
+      Serial.printf("Retrying MQTT connection in 5 seconds..\n");
+      mqtt.disconnect();
+      delay(5000);  // wait 5 seconds
   }
   Serial.printf("MQTT Connected!\n");   //output for if connection was successful
 }
