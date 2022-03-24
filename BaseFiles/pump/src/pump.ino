@@ -14,6 +14,6 @@ void setup() {
 
 void loop() {
   digitalWrite(PUMP, HIGH);
-  delay(3000);
+  delay(1000);
   digitalWrite(PUMP, LOW);
 }

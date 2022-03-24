@@ -251,5 +251,6 @@ void showDisplayValues(){
   display.printf("AQ: %i \n", sensor.getValue());     //gets the air quality
   display.printf("Moisture: %i \n", moistureValues);  //gets the moisture values
   display.printf("Dust: %0.2f \n", concentration);    //gets the dust values
+  display.printf("Time is %s\n", TimeOnly.c_str());   //gets time
   display.display();
 }
