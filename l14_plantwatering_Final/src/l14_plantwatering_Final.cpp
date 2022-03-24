@@ -166,6 +166,18 @@ void loop() {
     }
     lastTime2 = millis();
   }
+    //*Dust
+    duration = pulseIn(DUSTSENSOR, LOW);
+    lowpulseoccupancy = lowpulseoccupancy+duration;
+    if ((millis()-starttime) > sampletime_ms)//if the sampel time == 30s
+    {
+      ratio = lowpulseoccupancy/(sampletime_ms*10.0);  // Integer percentage 0=>100
+      concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
+      Serial.println(concentration);
+      lowpulseoccupancy = 0;
+      starttime = millis();
+    }
+  
   showDisplayValues(); //function to print sensor values to OLED
   
   //////////////////////////////////////////
@@ -198,18 +210,6 @@ void loop() {
     temp = (bme.readTemperature()*1.8)+32;  //gets the temp values  and converts them to F
     press = bme.readPressure()*0.00030;     //converts the press values to inches of murcury
     rHumidity = bme.readHumidity();         //gets RH values from the BME sensor
-
-    //*Dust
-    duration = pulseIn(DUSTSENSOR, LOW);
-    lowpulseoccupancy = lowpulseoccupancy+duration;
-    if ((millis()-starttime) > sampletime_ms)//if the sampel time == 30s
-    {
-      ratio = lowpulseoccupancy/(sampletime_ms*10.0);  // Integer percentage 0=>100
-      concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
-      Serial.println(concentration);
-      lowpulseoccupancy = 0;
-      starttime = millis();
-    }
 
     if(mqtt.Update()) {  //starts MQTT updats
       mqtttemp.publish(temp);                                      //publishes the temp values  Adafruit
